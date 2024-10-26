@@ -2,7 +2,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import requests, json, os
-# import DatabaseUtils, GraphUtils
+from DatabaseUtils import DatabaseUtils
 
 api_key = os.environ["API_KEY"]
 
@@ -91,8 +91,26 @@ def fill_page_database(root_page_id:str):
 
     response = requests.request("GET", url, headers=headers)
 
-    for _ in response.json()["results"]:
-        print(_)
+    # for _ in response.json()["results"]:
+    #     print(_)
+    page_contents = {}
+    for block in response.json()["results"]:
+        if block["type"] == "child_page":
+            print(block["child_page"]["title"])
+            page_contents[block["child_page"]["title"]] = ""
+
+
+            # Create a row in the page database
+            # Add block.get("id", "NO ID FOUND") to page_id column
+
+            DatabaseUtils.insert_doc#(title, text content)
+
+
+
+    
+
+
+    
 
 
 # pages_json = list_pages()
