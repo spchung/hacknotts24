@@ -19,6 +19,16 @@ class Graph:
         return CommonUtils.fuzzy_search(query, DatabaseUtils.get_all_terms_from_db())
 
     @staticmethod
+    def get_terms_by_doc_simple(doc):
+        query = "SELECT term_id FROM DOC_TERM_MAP WHERE doc_id like '%{}%' ORDER BY FREQ DESC".format(doc)
+        return DatabaseUtils.execute_query(query)
+
+    @staticmethod
+    def get_doc_by_term_simple(term):
+        query = "SELECT doc_id FROM DOC_TERM_MAP WHERE term_id = '{}' ORDER BY FREQ DESC".format(term)
+        return [i[0] for i in DatabaseUtils.execute_query(query)]
+
+    @staticmethod
     def get_terms_by_doc(doc_name):
         doc_id = DatabaseUtils.query_doc_id(doc_name)
         if doc_id is None:

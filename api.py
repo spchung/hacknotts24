@@ -51,12 +51,12 @@ async def query_terms():
 async def query_docs_by_topic(term):
   return {
     'status': 200,
-    'message': Graph.get_docs_by_term(term)
+    'message': Graph.get_doc_by_term_simple(term)
   }
 
 @app.post("/search_by_doc")
 async def query_terms_by_doc(doc):
     return {
         'status': 200,
-        'message': Graph.get_terms_by_doc(doc)
+        'message': Graph.get_terms_by_doc_simple(doc)
     }
