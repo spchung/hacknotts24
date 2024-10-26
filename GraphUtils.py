@@ -8,19 +8,22 @@ class Graph:
     def __init__(self):
         pass
 
-    def add_doc_2_graph(self, doc_name: str, term_freq: List[tuple]):
+    @staticmethod
+    def add_doc_2_graph(doc_name: str, term_freq: List[tuple]):
         for term, freq in term_freq:
             DatabaseUtils.insert_doc_term_relationship(doc_name, term, freq)
 
-    def search_terms(self, query):
+    @staticmethod
+    def search_terms(query):
         return CommonUtils.fuzzy_search(query, DatabaseUtils.get_all_terms_from_db())
 
-    def get_terms_by_doc(self, doc_name):
+    @staticmethod
+    def get_terms_by_doc(doc_name):
         doc_id = DatabaseUtils.query_doc_id(doc_name)
         if doc_id is None:
             print('doc not found!')
             return []
-        query = 'SELECT term_id FROM DOC_TERM_MAP WHERE doc_id = ? ORDER BY FREQ DESC'
+        query = "SELECT term_id FROM DOC_TERM_MAP WHERE doc_id = '{}' ORDER BY FREQ DESC".format_map()
         term_ids = DatabaseUtils.execute_query(query, (doc_id,))
         ans = []
         for term_id in term_ids:
@@ -28,7 +31,8 @@ class Graph:
             ans.append(DatabaseUtils.execute_query(q, term_id))
         return ans
 
-    def get_docs_by_term(self, term):
+    @staticmethod
+    def get_docs_by_term(term):
         term_id = DatabaseUtils.query_term_id(term)
         if term_id is None:
             print('term not found!')

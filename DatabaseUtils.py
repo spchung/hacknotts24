@@ -1,19 +1,18 @@
 import sqlite3
 
+from Entities.Doc import Doc
+
 
 class DatabaseUtils:
     @staticmethod
-    def execute_query(query, args=None):
+    def execute_query(query):
         try:
             # Connect to the database
             connection = sqlite3.connect('hacknoooooootts.db')
 
             # Create a cursor to execute the query
             cursor = connection.cursor()
-            if args is not None:
-                cursor.execute(query, args)
-            else:
-                cursor.execute(query)
+            cursor.execute(query)
 
             # If it’s a SELECT query, fetch the results
             if query.strip().lower().startswith("select"):
@@ -35,6 +34,7 @@ class DatabaseUtils:
     def create_tables():
         DatabaseUtils.execute_query('CREATE TABLE IF NOT EXISTS DOCS ('
                                     'DOC_ID INTEGER PRIMARY KEY AUTOINCREMENT,'
+                                    'UUID TEXT NOT NULL,'
                                     'DOC_NAME TEXT NOT NULL UNIQUE,'
                                     'DOC_CONTENT TEXT);')
         DatabaseUtils.execute_query('CREATE TABLE IF NOT EXISTS TERMS ('
@@ -48,16 +48,19 @@ class DatabaseUtils:
                                     'FOREIGN KEY(TERM_ID) REFERENCES TERMS(TERM_ID));')
 
     @staticmethod
-    def insert_doc(doc_name, doc_CONTENT):
-        id = DatabaseUtils.query_doc_id(doc_name)
+    def insert_doc(doc: Doc):
+        id = DatabaseUtils.query_doc_id(doc.doc_name)
         if id is not None:
             DatabaseUtils.execute_query(
-                "UPDATE DOCS SET DOC_CONTENT = '{}' WHERE DOC_NAME = '{}'".format(doc_CONTENT, doc_name))
+                "UPDATE DOCS SET DOC_CONTENT = '{}' WHERE DOC_NAME = '{}'".format(doc.doc_content, doc.doc_name))
+            DatabaseUtils.execute_query(
+                "UPDATE DOCS SET UUID = '{}' WHERE DOC_NAME = '{}'".format(doc.uuid, doc.doc_name))
             return id
         else:
-            DatabaseUtils.execute_query("INSERT INTO DOCS (DOC_NAME, DOC_CONTENT) VALUES (?, ?)",
-                                        (doc_name, doc_CONTENT))
-            return DatabaseUtils.query_doc_id(doc_name)
+            DatabaseUtils.execute_query(
+                "INSERT INTO DOCS (DOC_NAME, DOC_CONTENT, UUID) VALUES ('{}', '{}', '{}')"
+                .format(doc.doc_name, doc.doc_content, doc.uuid))
+            return DatabaseUtils.query_doc_id(doc.doc_name)
 
     @staticmethod
     def query_doc_id(doc_name):
@@ -74,13 +77,13 @@ class DatabaseUtils:
             DatabaseUtils.execute_query("UPDATE TERMS SET TERM = '{}' WHERE TERM_ID = '{}';".format(term_name, id))
             return id
         else:
-            DatabaseUtils.execute_query("INSERT INTO TERMS (TERM) VALUES (?)", (term_name,))
+            DatabaseUtils.execute_query("INSERT INTO TERMS (TERM) VALUES ('{}')".format(term_name, ))
             return DatabaseUtils.query_term_id(term_name)
 
     @staticmethod
     def query_term_id(term_name):
         try:
-            return DatabaseUtils.execute_query("SELECT TERM_ID FROM TERMS WHERE TERM = '{}';".format(term_name))
+            return DatabaseUtils.execute_query("SELECT TERM_ID FROM TERMS WHERE TERM = '{}';".format(term_name))[0][0]
         except Exception as e:
             print(e)
             return None
@@ -94,14 +97,14 @@ class DatabaseUtils:
             term_id = DatabaseUtils.query_term_id(term)[0][0]
             if term_id is None:
                 return
-            DatabaseUtils.execute_query("INSERT INTO DOC_TERM_MAP (DOC_ID, TERM_ID, FREQ) VALUES (?, ?, ?)",
-                                        (doc_id, term_id, freq))
+            DatabaseUtils.execute_query("INSERT INTO DOC_TERM_MAP (DOC_ID, TERM_ID, FREQ) VALUES ('{}', '{}', '{}')"
+                                        .format(doc_id, term_id, freq))
         except Exception as e:
             print(e)
 
     @staticmethod
     def get_all_terms_from_db():
-        return DatabaseUtils.execute_query('SELECT TERM FROM TERMS')
+        return [i[0] for i in DatabaseUtils.execute_query('SELECT TERM FROM TERMS')]
 
     @staticmethod
     def get_raw_text_from_db():
