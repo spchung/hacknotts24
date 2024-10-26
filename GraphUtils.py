@@ -29,6 +29,16 @@ class Graph:
         return [i[0] for i in DatabaseUtils.execute_query(query)]
 
     @staticmethod
+    def get_all_docs():
+        query = "SELECT * FROM DOCS"
+        return DatabaseUtils.execute_query(query)
+
+    @staticmethod
+    def get_all_maps():
+        query = "SELECT * FROM DOC_TERM_MAP"
+        return DatabaseUtils.execute_query(query)
+
+    @staticmethod
     def get_terms_by_doc(doc_name):
         doc_id = DatabaseUtils.query_doc_id(doc_name)
         if doc_id is None:
