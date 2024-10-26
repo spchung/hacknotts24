@@ -1,4 +1,5 @@
 import os
+import sys
 import strip_markdown
 import nltk
 from nltk.corpus import stopwords
