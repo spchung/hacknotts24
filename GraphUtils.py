@@ -2,6 +2,7 @@ from typing import List
 
 from CommonUtils import CommonUtils
 from DatabaseUtils import DatabaseUtils
+from Entities.Doc import Doc
 
 
 class Graph:
@@ -38,9 +39,10 @@ class Graph:
             print('term not found!')
             return []
         query = "SELECT doc_id FROM DOC_TERM_MAP WHERE term_id = '{}' ORDER BY FREQ DESC".format(term_id)
-        doc_ids = DatabaseUtils.execute_query(query)
+        doc_ids = [i[0] for i in DatabaseUtils.execute_query(query)]
         ans = []
         for doc_id in doc_ids:
-            q = "SELECT doc_ FROM DOC_TERM_MAP WHERE doc_id = '{}'".format(doc_id)
-            ans.append(DatabaseUtils.execute_query(q))
+            q = "SELECT * FROM DOCS WHERE doc_id = '{}'".format(doc_id)
+            row = DatabaseUtils.execute_query(q)[0]
+            ans.append(Doc(row[2], row[3], row[1]))
         return ans

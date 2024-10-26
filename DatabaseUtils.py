@@ -45,12 +45,13 @@ class DatabaseUtils:
                                     'TERM_ID INTEGER,'
                                     'FREQ INTEGER,'
                                     'FOREIGN KEY(DOC_ID) REFERENCES DOCS(DOC_ID),'
-                                    'FOREIGN KEY(TERM_ID) REFERENCES TERMS(TERM_ID));')
+                                    'FOREIGN KEY(TERM_ID) REFERENCES TERMS(TERM_ID),'
+                                    'UNIQUE (DOC_ID, TERM_ID));')
 
     @staticmethod
     def insert_doc(doc: Doc):
         id = DatabaseUtils.query_doc_id(doc.doc_name)
-        if id is not None:
+        if id:
             DatabaseUtils.execute_query(
                 "UPDATE DOCS SET DOC_CONTENT = '{}' WHERE DOC_NAME = '{}'".format(doc.doc_content, doc.doc_name))
             DatabaseUtils.execute_query(
@@ -65,7 +66,7 @@ class DatabaseUtils:
     @staticmethod
     def query_doc_id(doc_name):
         try:
-            return DatabaseUtils.execute_query("SELECT DOC_ID FROM DOCS WHERE DOC_NAME = '{}';".format(doc_name))
+            return DatabaseUtils.execute_query("SELECT DOC_ID FROM DOCS WHERE DOC_NAME = '{}';".format(doc_name))[0][0]
         except Exception as e:
             print(e)
             return None
@@ -91,10 +92,10 @@ class DatabaseUtils:
     @staticmethod
     def insert_doc_term_relationship(doc_name, term, freq):
         try:
-            doc_id = DatabaseUtils.query_doc_id(doc_name)[0][0]
+            doc_id = DatabaseUtils.query_doc_id(doc_name)
             if doc_id is None:
                 return
-            term_id = DatabaseUtils.query_term_id(term)[0][0]
+            term_id = DatabaseUtils.query_term_id(term)
             if term_id is None:
                 return
             DatabaseUtils.execute_query("INSERT INTO DOC_TERM_MAP (DOC_ID, TERM_ID, FREQ) VALUES ('{}', '{}', '{}')"

@@ -10,9 +10,10 @@ def get_ids_with_topic_input():
     for i in range(len(candidates)):
         print(i, candidates[i])
     chosen_one = int(input('Plz input the chosen one: '))
-    doc_ids = Graph.get_docs_by_term(candidates[chosen_one])
+    docs = Graph.get_docs_by_term(candidates[chosen_one])
     print('We got these docs:')
-    print(doc_ids)
+    for doc in docs:
+        print(doc)
 
 
 get_ids_with_topic_input()
