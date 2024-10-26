@@ -1,5 +1,6 @@
 from collections import defaultdict
 from typing import List
+from CommonUtils import CommonUtils
 
 
 class Graph:
@@ -17,6 +18,9 @@ class Graph:
 
     def find_docs_by_topic(self, topic_name: str):
         return sorted(self.topic_doc_dict[topic_name].items(), key=lambda x: x[1], reverse=True)
+
+    def search_topics(self, query):
+        return CommonUtils.fuzzy_search(query, self.topic_doc_dict.keys())
 
 
 def test_graph():
