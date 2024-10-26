@@ -3,7 +3,8 @@ import json
 from fastapi import FastAPI
 from DatabaseUtils import DatabaseUtils
 from get_data import get_all_pages_and_child_pages
-from nlp.content_ngrams_freq import build_page_to_bigram_map, build_relationshiop
+from content_ngrams_freq import build_page_to_bigram_map, build_relationshiop
+from GraphUtils import Graph
 
 DatabaseUtils.create_tables()
 
@@ -19,7 +20,7 @@ async def root():
 @app.post("/build_graph/{page_id}")
 async def build_graph(page_id):
   pages = get_all_pages_and_child_pages(page_id)
-  
+
   # insert pages into database
   for model in pages:
     doc_model = model.to_doc_model()
@@ -45,3 +46,17 @@ async def query_terms():
     'status': 200,
     'message': [map.to_json() for map in doc_term_maps]
   }
+
+@app.post("/search_by_term")
+async def query_docs_by_topic(term):
+  return {
+    'status': 200,
+    'message': Graph.get_docs_by_term(term)
+  }
+
+@app.post("/search_by_doc")
+async def query_terms_by_doc(doc):
+    return {
+        'status': 200,
+        'message': Graph.get_terms_by_doc(doc)
+    }
