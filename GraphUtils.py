@@ -20,12 +20,12 @@ class Graph:
 
     @staticmethod
     def get_terms_by_doc_simple(doc):
-        query = "SELECT term_id FROM DOC_TERM_MAP WHERE doc_id like '%{}%' ORDER BY FREQ DESC".format(doc)
+        query = "SELECT term_id FROM DOC_TERM_MAP WHERE doc_id like '%{}%' AND FREQ > 0 ORDER BY FREQ DESC".format(doc)
         return DatabaseUtils.execute_query(query)
 
     @staticmethod
     def get_doc_by_term_simple(term):
-        query = "SELECT doc_id FROM DOC_TERM_MAP WHERE term_id = '{}' ORDER BY FREQ DESC".format(term)
+        query = "SELECT doc_id FROM DOC_TERM_MAP WHERE term_id = '{}' AND FREQ > 0 ORDER BY FREQ DESC".format(term)
         return [i[0] for i in DatabaseUtils.execute_query(query)]
 
     @staticmethod
