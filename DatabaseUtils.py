@@ -75,7 +75,7 @@ class DatabaseUtils:
             DatabaseUtils.execute_query("UPDATE TERMS SET TERM = '{}' WHERE TERM_ID = '{}';".format(term_name, id))
             return id
         else:
-            DatabaseUtils.execute_query("INSERT INTO TERMS (TERM_NAME) VALUES (?)", (term_name))
+            DatabaseUtils.execute_query("INSERT INTO TERMS (TERM) VALUES (?)", (term_name,))
             return DatabaseUtils.query_term_id(term_name)
 
     @staticmethod
@@ -101,13 +101,9 @@ class DatabaseUtils:
             print(e)
 
     @staticmethod
-    def get_all_topics_from_db():
+    def get_all_terms_from_db():
         return DatabaseUtils.execute_query('SELECT TERM FROM TERMS')
 
     @staticmethod
     def get_raw_text_from_db():
         return ''.join(DatabaseUtils.execute_query('SELECT DOC_CONTENT FROM DOCS'))
-
-
-DatabaseUtils.create_tables()
-DatabaseUtils.execute_query("SELECT name FROM sqlite_master WHERE type='table';")
