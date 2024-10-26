@@ -1,6 +1,7 @@
 import sqlite3
 
 from Entities.Doc import Doc
+from Entities.Doc_Term_Map import DocTermMap
 
 
 class DatabaseUtils:
@@ -89,6 +90,7 @@ class DatabaseUtils:
             print(e)
             return None
 
+    @DeprecationWarning
     @staticmethod
     def insert_doc_term_relationship(doc_name, term, freq):
         try:
@@ -98,15 +100,15 @@ class DatabaseUtils:
             term_id = DatabaseUtils.query_term_id(term)
             if term_id is None:
                 return
-            val = DatabaseUtils.execute_query("SELECT FREQ FROM DOC_TERM_MAP "
-                                              "WHERE DOC_ID = '{}' AND TERM_ID = '{}';".format(doc_id, term_id))
-            if val:
-                freq += val[0][0]
-                DatabaseUtils.execute_query("UPDATE DOC_TERM_MAP set FREQ = '{}' WHERE DOC_ID = '{}' AND TERM_ID = '{}'"
-                                            .format(freq, doc_id, term_id))
-            else:
-                DatabaseUtils.execute_query("INSERT INTO DOC_TERM_MAP (DOC_ID, TERM_ID, FREQ) VALUES ('{}', '{}', '{}')"
-                                            .format(doc_id, term_id, freq))
+            # val = DatabaseUtils.execute_query("SELECT FREQ FROM DOC_TERM_MAP "
+            #                                   "WHERE DOC_ID = '{}' AND TERM_ID = '{}';".format(doc_id, term_id))
+            # if val:
+            #     freq += val[0][0]
+            #     DatabaseUtils.execute_query("UPDATE DOC_TERM_MAP set FREQ = '{}' WHERE DOC_ID = '{}' AND TERM_ID = '{}'"
+            #                                 .format(freq, doc_id, term_id))
+            # else:
+            DatabaseUtils.execute_query("INSERT INTO DOC_TERM_MAP (DOC_ID, TERM_ID, FREQ) VALUES ('{}', '{}', '{}')"
+                                        .format(doc_id, term_id, freq))
         except Exception as e:
             print(e)
 
@@ -116,4 +118,32 @@ class DatabaseUtils:
 
     @staticmethod
     def get_raw_text_from_db():
-        return '\n'.join(DatabaseUtils.execute_query('SELECT DOC_CONTENT FROM DOCS')[0])
+        docs = DatabaseUtils.execute_query('SELECT DOC_CONTENT FROM DOCS')
+        return [doc[0] for doc in docs]
+    
+    @staticmethod
+    def list_docs():
+        docs = DatabaseUtils.execute_query('SELECT * FROM DOCS')
+        res = []
+        for doc in docs:
+            id, uuid, name, content,  = doc
+            res.append(
+                Doc(doc_name=name, doc_content=content, uuid=uuid)
+            )
+        return res
+    
+    @staticmethod
+    def insert_doc_term_map(docTermMap: DocTermMap):
+        doc_id = docTermMap.doc_id
+        term = docTermMap.term
+        freq = docTermMap.term_freq
+        val = DatabaseUtils.execute_query("SELECT FREQ FROM DOC_TERM_MAP "
+                                              "WHERE DOC_ID = '{}' AND TERM_ID = '{}';".format(doc_id, term))
+        if val:
+            DatabaseUtils.execute_query("UPDATE DOC_TERM_MAP set FREQ = '{}' WHERE DOC_ID = '{}' AND TERM_ID = '{}'".format(freq, doc_id, term))
+        else:
+            DatabaseUtils.execute_query("INSERT INTO DOC_TERM_MAP (DOC_ID, TERM_ID, FREQ) VALUES ('{}', '{}', '{}')"
+                                        .format(doc_id, term, freq))
+
+        return True
+    

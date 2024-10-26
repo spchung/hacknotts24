@@ -144,17 +144,14 @@ def get_all_pages_and_child_pages(page_id:str):
         page_content_lis.append(page_model)
         all_pages_id.extend(children_page_ids)
     
-    for model in page_content_lis:
-        doc_model = model.to_doc_model()
-        DatabaseUtils.insert_doc(doc_model)
     return page_content_lis
     
 
 
 
-sample_page_id = "120224ca-354c-8017-bdf0-c9978dbbc5fa"
-root_id = "111224ca-354c-8020-8ccd-f1d4e30914ac"
-page_models = get_all_pages_and_child_pages(root_id)
+# sample_page_id = "120224ca-354c-8017-bdf0-c9978dbbc5fa"
+# root_id = "111224ca-354c-8020-8ccd-f1d4e30914ac"
+# page_models = get_all_pages_and_child_pages(root_id)
 
-from pprint import pprint
-pprint([ent.to_json()['title'] for ent in page_models])
+# from pprint import pprint
+# pprint([ent.to_json()['title'] for ent in page_models])

@@ -9,3 +9,10 @@ class Doc:
 
     def __str__(self):
         return json.dumps(self.__dict__, indent=4)
+    
+    def to_json(self):
+        return {
+            "doc_name": self.doc_name,
+            "doc_content": self.doc_content,
+            "uuid": self.uuid
+        }
