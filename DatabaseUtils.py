@@ -98,8 +98,15 @@ class DatabaseUtils:
             term_id = DatabaseUtils.query_term_id(term)
             if term_id is None:
                 return
-            DatabaseUtils.execute_query("INSERT INTO DOC_TERM_MAP (DOC_ID, TERM_ID, FREQ) VALUES ('{}', '{}', '{}')"
-                                        .format(doc_id, term_id, freq))
+            val = DatabaseUtils.execute_query("SELECT FREQ FROM DOC_TERM_MAP "
+                                              "WHERE DOC_ID = '{}' AND TERM_ID = '{}';".format(doc_id, term_id))
+            if val:
+                freq += val[0][0]
+                DatabaseUtils.execute_query("UPDATE DOC_TERM_MAP set FREQ = '{}' WHERE DOC_ID = '{}' AND TERM_ID = '{}'"
+                                            .format(freq, doc_id, term_id))
+            else:
+                DatabaseUtils.execute_query("INSERT INTO DOC_TERM_MAP (DOC_ID, TERM_ID, FREQ) VALUES ('{}', '{}', '{}')"
+                                            .format(doc_id, term_id, freq))
         except Exception as e:
             print(e)
 
