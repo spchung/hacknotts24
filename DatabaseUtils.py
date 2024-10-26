@@ -109,4 +109,4 @@ class DatabaseUtils:
 
     @staticmethod
     def get_raw_text_from_db():
-        return ''.join(DatabaseUtils.execute_query('SELECT DOC_CONTENT FROM DOCS'))
+        return '\n'.join(DatabaseUtils.execute_query('SELECT DOC_CONTENT FROM DOCS'))
