@@ -101,7 +101,7 @@ class DatabaseUtils:
             print(e)
 
     @staticmethod
-    def get_all_topics_from_db():
+    def get_all_terms_from_db():
         return DatabaseUtils.execute_query('SELECT TERM FROM TERMS')
 
     @staticmethod
