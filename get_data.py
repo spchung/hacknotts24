@@ -1,12 +1,13 @@
+from models import PageModel
+
 from dotenv import load_dotenv
 load_dotenv()
 
 import requests, json, os
-from DatabaseUtils import DatabaseUtils
 
 api_key = os.environ["API_KEY"]
 
-def get_page_json(page_id: str):
+def get_page_info(page_id: str):
     url = "https://api.notion.com/v1/pages/" + page_id
 
     payload = {}
@@ -20,8 +21,6 @@ def get_page_json(page_id: str):
     response_json = response.json()
     
     return response_json
-
-
 
 def list_pages(): # arg = subject (parent folder name/id)
     url = "https://api.notion.com/v1/search"
@@ -46,8 +45,6 @@ def list_pages(): # arg = subject (parent folder name/id)
     response = requests.request("POST", url, headers=headers, data=payload)
 
     return response.json()["results"]
-
-
 
 def process_page_metadata(pages:list):
     for page in pages:
@@ -89,39 +86,68 @@ def fill_page_database(root_page_id:str):
     }
 
     response = requests.request("GET", url, headers=headers)
+    if response.status_code != 200:
+        raise Exception(response.json())
 
-    page_contents = {} #empty dict to store page title keys and page content values
+    TYPE_TO_KEY = {
+        "paragraph":"rich_text",
+        "text": "plain_text",
+        "heading_1": "rich_text",
+        "heading_2":"rich_text",
+        "heading_3":"rich_text",
+        "bulleted_list_item":"rich_text",
+        "numbered_list_item":"rich_text",
+        "rich_text":"plain_text"
+    }
 
+    more_pages_id = []
+    # if we see rich text - value is list of entity
+    block_entities = response.json()["results"]
 
-    textual_block_types = ["text", "paragraph", "headings1", "headings2", "headings3", "bullet_list_item"]
+    entity_plain_texts = []
+    for entity in block_entities:
+        entity_type = entity["type"]
+        try:
+            if entity_type in TYPE_TO_KEY:
+                rich_text_to_plain = []
+                for text in entity[entity_type]["rich_text"]:
+                    rich_text_to_plain.append(text['plain_text'])
+
+                plain_text = ' '.join(rich_text_to_plain)
+                entity_plain_texts.append(plain_text)
+            
+            # if linking to child page, call get_page_info
+            elif entity_type == 'child_page':
+                child_page_id = entity["id"]
+                more_pages_id.append(child_page_id)
+        except Exception as e:
+            continue
     
-    for entity in response.json()["results"]:
-        if entity["type"] == "child_page":
-            print(entity["child_page"]["title"])
-            page_contents[entity["child_page"]["title"]] = ""
+    title, page, parent_id = get_page_info(root_page_id)                  
+    model = PageModel(
+        root_page_id,
+        title,
+        " ".join(entity_plain_texts)
+    )
+    # print(len(more_pages_id))
+    return model, more_pages_id
 
-            child_page_contents = get_page_contents(entity["id"])
+def get_all_pages_and_child_pages(page_id:str):
+    all_pages_id = [page_id]
 
-            for block in child_page_contents:
-                if block["type"] in textual_block_types:
-                    print(type(block[block["type"]]["rich_text"]))
-                    plain_text = block[block["type"]]["rich_text"][0]["plain_text"]
-                    page_contents[entity["child_page"]["title"]] += plain_text
-
-    print(page_contents)
+    page_content_lis = [] 
+    while all_pages_id:
+        page_id = all_pages_id.pop()
+        page_model, children_page_ids = fill_page_database(page_id)
+        page_content_lis.append(page_model)
+        all_pages_id.extend(children_page_ids)
+    
+    return page_content_lis
     
 
+sample_page_id = "120224ca-354c-8017-bdf0-c9978dbbc5fa"
+root_id = "111224ca-354c-8020-8ccd-f1d4e30914ac"
+page_models = get_all_pages_and_child_pages(root_id)
 
-# pages_json = list_pages()
-
-# process_page_metadata(pages_json)
-
-# print(get_page_info("12a224ca-354c-80b0-950e-fc16ac57c1d6"))
-
-fill_page_database("111224ca-354c-8020-8ccd-f1d4e30914ac")
-
-# get_page_contents("12a224ca-354c-80b0-950e-fc16ac57c1d6")
-
-
-
-
+from pprint import pprint
+pprint([ent.to_json()['title'] for ent in page_models])
