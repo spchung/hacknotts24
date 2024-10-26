@@ -25,6 +25,10 @@ def test_insert_term():
     DatabaseUtils.insert_term('SVM')
     DatabaseUtils.insert_term('NLP')
     DatabaseUtils.insert_term('IDK')
+    DatabaseUtils.insert_term('hasd')
+    DatabaseUtils.insert_term('apple')
+    DatabaseUtils.insert_term('Ñ')
+    DatabaseUtils.insert_term('NNNNNNNN')
 
 
 def test_insert_doc_term_relationship():
