@@ -18,8 +18,7 @@ class DatabaseUtils:
             # If it’s a SELECT query, fetch the results
             if query.strip().lower().startswith("select"):
                 rows = cursor.fetchall()
-                for row in rows:
-                    print(row)
+                return rows
             else:
                 connection.commit()  # Commit for non-SELECT queries (e.g., INSERT, UPDATE)
                 print("Query executed successfully.")
@@ -89,14 +88,14 @@ class DatabaseUtils:
     @staticmethod
     def insert_doc_term_relationship(doc_name, term, freq):
         try:
-            doc_id = DatabaseUtils.query_doc_id(doc_name)
+            doc_id = DatabaseUtils.query_doc_id(doc_name)[0][0]
             if doc_id is None:
                 return
-            term_id = DatabaseUtils.query_term_id(term)
+            term_id = DatabaseUtils.query_term_id(term)[0][0]
             if term_id is None:
                 return
             DatabaseUtils.execute_query("INSERT INTO DOC_TERM_MAP (DOC_ID, TERM_ID, FREQ) VALUES (?, ?, ?)",
-                                        (doc_id, term, freq))
+                                        (doc_id, term_id, freq))
         except Exception as e:
             print(e)
 
