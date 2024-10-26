@@ -19,12 +19,8 @@ def get_page_info(page_id: str):
     response = requests.request("GET", url, headers=headers, data=payload)
 
     response_json = response.json()
-
-    title = response_json.get("properties", {}).get("title", {}).get("title", [{}])[0].get("text", {}).get("content", "")
-    page_id = response_json.get("id", "")
-    parent_id = response_json.get("parent", {}).get("page_id", "")
-
-    return (title, page_id, parent_id)
+    
+    return response_json
 
 def list_pages(): # arg = subject (parent folder name/id)
     url = "https://api.notion.com/v1/search"
@@ -58,6 +54,20 @@ def process_page_metadata(pages:list):
         parent_id = page.get("parent", {}).get("page_id", "")
         print(title, page_id, parent_id)
 
+
+def get_page_contents(page_id:str):
+    url = f"https://api.notion.com/v1/blocks/{page_id}/children?page_size=100"
+
+    headers = {
+        'Notion-Version': '2022-06-28',
+        'Authorization': f'Bearer {api_key}'
+    }
+
+    response = requests.request("GET", url, headers=headers)
+
+    print(response.json()["results"])
+    return response.json()["results"]
+
 def fill_page_database(root_page_id:str):
     """
     Step 1: Call API https://api.notion.com/v1/blocks/:root_id/children?page_size=100 
@@ -66,10 +76,7 @@ def fill_page_database(root_page_id:str):
             - Call API <url> to get block IDs
             - For each block ID
                 - If block type is text
-                    - Append content to subject_db.children_ID.content 
-    
-    Step 2: 
-    
+                    - Append content to subject_db.children_ID.content
     """
     url = f"https://api.notion.com/v1/blocks/{root_page_id}/children?page_size=100"
 
@@ -136,7 +143,6 @@ def get_all_pages_and_child_pages(page_id:str):
         all_pages_id.extend(children_page_ids)
     
     return page_content_lis
-    
     
 
 sample_page_id = "120224ca-354c-8017-bdf0-c9978dbbc5fa"
