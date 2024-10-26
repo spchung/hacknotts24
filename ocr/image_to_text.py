@@ -3,11 +3,19 @@ import easyocr
 import cv2
 import pytesseract
 import torch
+import warnings
+from PIL import Image
 from transformers import TrOCRProcessor, VisionEncoderDecoderModel
 
 USER = "Melvin"
 pytesseract.pytesseract.tesseract_cmd = os.path.join("C:\\", "Users", USER, "AppData", "Local", "Programs", "Tesseract-OCR", "tesseract.exe")
-img_path = os.path.join("ocr", "images", "note1.jpg")
+img_path = os.path.join("ocr", "images", "sample_text2.jpg")
+
+# warnings.filterwarnings("ignore", message="Some weights of.*were not initialized")
+
+processor = TrOCRProcessor.from_pretrained("microsoft/trocr-base-handwritten")
+model = VisionEncoderDecoderModel.from_pretrained("microsoft/trocr-base-handwritten")
+
 
 def read_text_easyocr(image_path):
     reader = easyocr.Reader(["en"])
@@ -19,6 +27,7 @@ def read_text_easyocr(image_path):
     print(full_text)
 
     return full_text
+
 
 def read_text_tesseract(image_path):
     image = cv2.imread(image_path)
@@ -44,44 +53,24 @@ def read_text_tesseract(image_path):
     return full_text
 
 
-# Load the model and processor once
-processor = TrOCRProcessor.from_pretrained("microsoft/trocr-base-printed")
-model = VisionEncoderDecoderModel.from_pretrained("microsoft/trocr-base-printed")
-
-def read_text_trocr(image_path):
-    """
-    Detect text from an image using Hugging Face's TrOCR model and OpenCV.
-
-    Parameters:
-        image_path (str): Path to the image file.
-
-    Returns:
-        str: Detected text from the image.
-    """
-    # Load the image with OpenCV
-    image = cv2.imread(image_path)
-
-    # Check if the image loaded successfully
-    if image is None:
-        print("Error: Could not load image.")
+def read_text_trocr(image_path, max_tokens=50):
+    if not os.path.exists(image_path):
+        print("Error: Image file does not exist.")
         return ""
 
-    # Convert the image from BGR to RGB format
-    image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    
-    # Resize and normalize the image to match model requirements
-    image_resized = cv2.resize(image_rgb, (384, 384))  # Use the resolution required by the model
-    image_tensor = torch.tensor(image_resized).permute(2, 0, 1).unsqueeze(0) / 255.0  # Normalize to [0, 1]
+    image = Image.open(image_path).convert("RGB")
+    pixel_values = processor(image, return_tensors="pt").pixel_values
+    generated_ids = model.generate(pixel_values, max_new_tokens=max_tokens)
+    generated_text = processor.batch_decode(generated_ids, skip_special_tokens=True)[0]
 
-    # Preprocess the image and perform OCR
-    pixel_values = processor(images=image_tensor, return_tensors="pt").pixel_values
-    generated_ids = model.generate(pixel_values)
-    text = processor.batch_decode(generated_ids, skip_special_tokens=True)[0]
+    print("TrOCR Detected Text:")
+    print(generated_text)
 
-    print("TrOCR detected Text:")
-    print(text)
-
-    return text
+    return generated_text
 
 
+easyocr_text = read_text_easyocr(img_path)
+print("")
+tesseract_text = read_text_tesseract(img_path)
+print("")
 trocr_text = read_text_trocr(img_path)

@@ -2,3 +2,5 @@ bin
 lib
 include
 .env
+__pycache__
+*.db
