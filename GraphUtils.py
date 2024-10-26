@@ -1,7 +1,4 @@
-from collections import defaultdict
 from typing import List
-
-from scipy.stats import ansari
 
 from CommonUtils import CommonUtils
 from DatabaseUtils import DatabaseUtils
