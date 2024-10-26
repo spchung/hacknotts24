@@ -1,6 +1,7 @@
 from collections import defaultdict
 from typing import List
 from CommonUtils import CommonUtils
+from DatabaseUtils import DatabaseUtils
 
 
 class Graph:
@@ -10,17 +11,10 @@ class Graph:
 
     def add_doc_2_graph(self, doc_name: str, topic_freq: List[tuple]):
         for topic, freq in topic_freq:
-            self.topic_doc_dict[topic][doc_name] = freq
-            self.doc_topic_dict[doc_name][topic] = freq
-
-    def find_topic_by_doc(self, doc_name: str):
-        return sorted(self.doc_topic_dict[doc_name].items(), key=lambda x: x[1], reverse=True)
-
-    def find_docs_by_topic(self, topic_name: str):
-        return sorted(self.topic_doc_dict[topic_name].items(), key=lambda x: x[1], reverse=True)
+            DatabaseUtils.insert_doc_term_relationship(doc_name, topic, freq)
 
     def search_topics(self, query):
-        return CommonUtils.fuzzy_search(query, self.topic_doc_dict.keys())
+        return CommonUtils.fuzzy_search(query, DatabaseUtils.get_all_topics_from_db())
 
 
 def test_graph():

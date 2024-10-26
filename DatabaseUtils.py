@@ -3,14 +3,17 @@ import sqlite3
 
 class DatabaseUtils:
     @staticmethod
-    def execute_query(query):
+    def execute_query(query, args=None):
         try:
             # Connect to the database
             connection = sqlite3.connect('hacknoooooootts.db')
 
             # Create a cursor to execute the query
             cursor = connection.cursor()
-            cursor.execute(query)
+            if args is not None:
+                cursor.execute(query, args)
+            else:
+                cursor.execute(query)
 
             # If it’s a SELECT query, fetch the results
             if query.strip().lower().startswith("select"):
@@ -33,7 +36,7 @@ class DatabaseUtils:
     def create_tables():
         DatabaseUtils.execute_query('CREATE TABLE IF NOT EXISTS DOCS ('
                                     'DOC_ID INTEGER PRIMARY KEY AUTOINCREMENT,'
-                                    'DOC_NAME TEXT NOT NULL,'
+                                    'DOC_NAME TEXT NOT NULL UNIQUE,'
                                     'DOC_CONTEXT TEXT);')
         DatabaseUtils.execute_query('CREATE TABLE IF NOT EXISTS TERMS ('
                                     'TERM_ID INTEGER PRIMARY KEY AUTOINCREMENT,'
@@ -45,8 +48,62 @@ class DatabaseUtils:
                                     'FOREIGN KEY(DOC_ID) REFERENCES DOCS(DOC_ID),'
                                     'FOREIGN KEY(TERM_ID) REFERENCES TERMS(TERM_ID));')
 
+    @staticmethod
+    def insert_doc(doc_name, doc_context):
+        id = DatabaseUtils.query_doc_id(doc_name)
+        if id is not None:
+            DatabaseUtils.execute_query(
+                "UPDATE DOCS SET DOC_CONTEXT = '{}' WHERE DOC_NAME = '{}'".format(doc_context, doc_name))
+            return id
+        else:
+            DatabaseUtils.execute_query("INSERT INTO DOCS (DOC_NAME, DOC_CONTEXT) VALUES (?, ?)",
+                                        (doc_name, doc_context))
+            return DatabaseUtils.query_doc_id(doc_name)
 
-# Example usage:
-# Replace "your_table" with the actual table name in your Supabase database
+    @staticmethod
+    def query_doc_id(doc_name):
+        try:
+            return DatabaseUtils.execute_query("SELECT DOC_ID FROM DOCS WHERE DOC_NAME = '{}';".format(doc_name))
+        except Exception as e:
+            print(e)
+            return None
+
+    @staticmethod
+    def insert_term(term_name):
+        id = DatabaseUtils.query_term_id(term_name)
+        if id is not None:
+            DatabaseUtils.execute_query("UPDATE TERMS SET TERM = '{}' WHERE TERM_ID = '{}';".format(term_name, id))
+            return id
+        else:
+            DatabaseUtils.execute_query("INSERT INTO TERMS (TERM_NAME) VALUES (?)", (term_name))
+            return DatabaseUtils.query_term_id(term_name)
+
+    @staticmethod
+    def query_term_id(term_name):
+        try:
+            return DatabaseUtils.execute_query("SELECT TERM_ID FROM TERMS WHERE TERM = '{}';".format(term_name))
+        except Exception as e:
+            print(e)
+            return None
+
+    @staticmethod
+    def insert_doc_term_relationship(doc_name, term, freq):
+        try:
+            doc_id = DatabaseUtils.query_doc_id(doc_name)
+            if doc_id is None:
+                return
+            term_id = DatabaseUtils.query_term_id(term)
+            if term_id is None:
+                return
+            DatabaseUtils.execute_query("INSERT INTO DOC_TERM_MAP (DOC_ID, TERM_ID, FREQ) VALUES (?, ?, ?)",
+                                        (doc_id, term, freq))
+        except Exception as e:
+            print(e)
+
+    @staticmethod
+    def get_all_topics_from_db():
+        return DatabaseUtils.execute_query('SELECT TERM FROM TERMS')
+
+
 DatabaseUtils.create_tables()
 DatabaseUtils.execute_query("SELECT name FROM sqlite_master WHERE type='table';")
