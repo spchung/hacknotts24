@@ -6,12 +6,7 @@ from DatabaseUtils import DatabaseUtils
 
 api_key = os.environ["API_KEY"]
 
-
-
-
-
-
-def get_page_info(page_id: str):
+def get_page_json(page_id: str):
     url = "https://api.notion.com/v1/pages/" + page_id
 
     payload = {}
@@ -23,12 +18,8 @@ def get_page_info(page_id: str):
     response = requests.request("GET", url, headers=headers, data=payload)
 
     response_json = response.json()
-
-    title = response_json.get("properties", {}).get("title", {}).get("title", [{}])[0].get("text", {}).get("content", "")
-    page_id = response_json.get("id", "")
-    parent_id = response_json.get("parent", {}).get("page_id", "")
-
-    return (title, page_id, parent_id)
+    
+    return response_json
 
 
 
@@ -67,7 +58,18 @@ def process_page_metadata(pages:list):
         print(title, page_id, parent_id)
 
 
-# NEED TO CREATE A PAGE DB FOR EACH SUBJECT
+def get_page_contents(page_id:str):
+    url = f"https://api.notion.com/v1/blocks/{page_id}/children?page_size=100"
+
+    headers = {
+        'Notion-Version': '2022-06-28',
+        'Authorization': f'Bearer {api_key}'
+    }
+
+    response = requests.request("GET", url, headers=headers)
+
+    print(response.json()["results"])
+    return response.json()["results"]
 
 def fill_page_database(root_page_id:str):
     """
@@ -77,10 +79,7 @@ def fill_page_database(root_page_id:str):
             - Call API <url> to get block IDs
             - For each block ID
                 - If block type is text
-                    - Append content to subject_db.children_ID.content 
-    
-    Step 2: 
-    
+                    - Append content to subject_db.children_ID.content
     """
     url = f"https://api.notion.com/v1/blocks/{root_page_id}/children?page_size=100"
 
@@ -91,25 +90,25 @@ def fill_page_database(root_page_id:str):
 
     response = requests.request("GET", url, headers=headers)
 
-    # for _ in response.json()["results"]:
-    #     print(_)
-    page_contents = {}
-    for block in response.json()["results"]:
-        if block["type"] == "child_page":
-            print(block["child_page"]["title"])
-            page_contents[block["child_page"]["title"]] = ""
+    page_contents = {} #empty dict to store page title keys and page content values
 
 
-            # Create a row in the page database
-            # Add block.get("id", "NO ID FOUND") to page_id column
-
-            DatabaseUtils.insert_doc#(title, text content)
-
-
-
+    textual_block_types = ["text", "paragraph", "headings1", "headings2", "headings3", "bullet_list_item"]
     
+    for entity in response.json()["results"]:
+        if entity["type"] == "child_page":
+            print(entity["child_page"]["title"])
+            page_contents[entity["child_page"]["title"]] = ""
 
+            child_page_contents = get_page_contents(entity["id"])
 
+            for block in child_page_contents:
+                if block["type"] in textual_block_types:
+                    print(type(block[block["type"]]["rich_text"]))
+                    plain_text = block[block["type"]]["rich_text"][0]["plain_text"]
+                    page_contents[entity["child_page"]["title"]] += plain_text
+
+    print(page_contents)
     
 
 
@@ -120,3 +119,9 @@ def fill_page_database(root_page_id:str):
 # print(get_page_info("12a224ca-354c-80b0-950e-fc16ac57c1d6"))
 
 fill_page_database("111224ca-354c-8020-8ccd-f1d4e30914ac")
+
+# get_page_contents("12a224ca-354c-80b0-950e-fc16ac57c1d6")
+
+
+
+
