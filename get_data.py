@@ -20,7 +20,10 @@ def get_page_info(page_id: str):
 
     response_json = response.json()
     
-    return response_json
+    title = response_json.get("properties", {}).get("title", {}).get("title", [{}])[0].get("text", {}).get("content", "")
+    page_id = response_json.get("id", "")
+    parent_id = response_json.get("parent", {}).get("page_id", "")
+    return title, page_id, parent_id
 
 def list_pages(): # arg = subject (parent folder name/id)
     url = "https://api.notion.com/v1/search"
@@ -123,13 +126,12 @@ def fill_page_database(root_page_id:str):
         except Exception as e:
             continue
     
-    title, page, parent_id = get_page_info(root_page_id)                  
+    title, page_id, parent_id = get_page_info(root_page_id)                  
     model = PageModel(
         root_page_id,
         title,
         " ".join(entity_plain_texts)
     )
-    # print(len(more_pages_id))
     return model, more_pages_id
 
 def get_all_pages_and_child_pages(page_id:str):
