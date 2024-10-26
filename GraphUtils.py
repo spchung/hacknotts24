@@ -23,12 +23,12 @@ class Graph:
         if doc_id is None:
             print('doc not found!')
             return []
-        query = "SELECT term_id FROM DOC_TERM_MAP WHERE doc_id = '{}' ORDER BY FREQ DESC".format_map()
-        term_ids = DatabaseUtils.execute_query(query, (doc_id,))
+        query = "SELECT term_id FROM DOC_TERM_MAP WHERE doc_id = '{}' ORDER BY FREQ DESC".format(doc_id)
+        term_ids = DatabaseUtils.execute_query(query)
         ans = []
         for term_id in term_ids:
-            q = 'SELECT TERM FROM TERMS WHERE term_id = ?'
-            ans.append(DatabaseUtils.execute_query(q, term_id))
+            q = "SELECT TERM FROM TERMS WHERE term_id = '{}'".format(term_id)
+            ans.append(DatabaseUtils.execute_query(q))
         return ans
 
     @staticmethod
@@ -37,10 +37,10 @@ class Graph:
         if term_id is None:
             print('term not found!')
             return []
-        query = 'SELECT doc_id FROM DOC_TERM_MAP WHERE term_id = ? ORDER BY FREQ DESC'
-        doc_ids = DatabaseUtils.execute_query(query, (term_id,))
+        query = "SELECT doc_id FROM DOC_TERM_MAP WHERE term_id = '{}' ORDER BY FREQ DESC".format(term_id)
+        doc_ids = DatabaseUtils.execute_query(query)
         ans = []
         for doc_id in doc_ids:
-            q = 'SELECT doc_ FROM DOC_TERM_MAP WHERE doc_id = ?'
-            ans.append(DatabaseUtils.execute_query(q, doc_id))
+            q = "SELECT doc_ FROM DOC_TERM_MAP WHERE doc_id = '{}'".format(doc_id)
+            ans.append(DatabaseUtils.execute_query(q))
         return ans
