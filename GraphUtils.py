@@ -39,6 +39,16 @@ class Graph:
         return DatabaseUtils.execute_query(query)
 
     @staticmethod
+    def get_by_doc_id(doc_id):
+        query = "SELECT * FROM DOC_TERM_MAP WHERE doc_id = '{}'".format(doc_id)
+        return DatabaseUtils.execute_query(query)
+
+    @staticmethod
+    def get_by_term_id(term_id):
+        query = "SELECT * FROM DOC_TERM_MAP WHERE term_id = '{}'".format(term_id)
+        return DatabaseUtils.execute_query(query)
+
+    @staticmethod
     def get_terms_by_doc(doc_name):
         doc_id = DatabaseUtils.query_doc_id(doc_name)
         if doc_id is None:

@@ -61,16 +61,30 @@ async def query_terms_by_doc(doc):
         'message': Graph.get_terms_by_doc_simple(doc)
     }
 
-@app.post("/get_all_doc")
+@app.get("/get_all_doc")
 async def get_doc():
   return {
     'status': 200,
     'message': Graph.get_all_docs()
   }
 
-@app.post("/get_all_maps")
+@app.get("/get_all_maps")
 async def get_all_maps():
   return {
     'status': 200,
     'message': Graph.get_all_maps()
+  }
+
+@app.get("/get_by_doc_id/{doc_id}")
+async def get_by_doc_id(doc_id):
+  return {
+    'status': 200,
+    'message': Graph.get_by_doc_id(doc_id)
+  }
+
+@app.get("/get_by_term_id/{term_id}")
+async def get_by_term_id(term_id):
+  return {
+    'status': 200,
+    'message': Graph.get_terms_by_doc(term_id)
   }
