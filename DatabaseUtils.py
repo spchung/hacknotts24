@@ -37,7 +37,7 @@ class DatabaseUtils:
         DatabaseUtils.execute_query('CREATE TABLE IF NOT EXISTS DOCS ('
                                     'DOC_ID INTEGER PRIMARY KEY AUTOINCREMENT,'
                                     'DOC_NAME TEXT NOT NULL UNIQUE,'
-                                    'DOC_CONTEXT TEXT);')
+                                    'DOC_CONTENT TEXT);')
         DatabaseUtils.execute_query('CREATE TABLE IF NOT EXISTS TERMS ('
                                     'TERM_ID INTEGER PRIMARY KEY AUTOINCREMENT,'
                                     'TERM TEXT NOT NULL);')
@@ -49,15 +49,15 @@ class DatabaseUtils:
                                     'FOREIGN KEY(TERM_ID) REFERENCES TERMS(TERM_ID));')
 
     @staticmethod
-    def insert_doc(doc_name, doc_context):
+    def insert_doc(doc_name, doc_CONTENT):
         id = DatabaseUtils.query_doc_id(doc_name)
         if id is not None:
             DatabaseUtils.execute_query(
-                "UPDATE DOCS SET DOC_CONTEXT = '{}' WHERE DOC_NAME = '{}'".format(doc_context, doc_name))
+                "UPDATE DOCS SET DOC_CONTENT = '{}' WHERE DOC_NAME = '{}'".format(doc_CONTENT, doc_name))
             return id
         else:
-            DatabaseUtils.execute_query("INSERT INTO DOCS (DOC_NAME, DOC_CONTEXT) VALUES (?, ?)",
-                                        (doc_name, doc_context))
+            DatabaseUtils.execute_query("INSERT INTO DOCS (DOC_NAME, DOC_CONTENT) VALUES (?, ?)",
+                                        (doc_name, doc_CONTENT))
             return DatabaseUtils.query_doc_id(doc_name)
 
     @staticmethod
@@ -103,6 +103,10 @@ class DatabaseUtils:
     @staticmethod
     def get_all_topics_from_db():
         return DatabaseUtils.execute_query('SELECT TERM FROM TERMS')
+
+    @staticmethod
+    def get_raw_text_from_db():
+        return ''.join(DatabaseUtils.execute_query('SELECT DOC_CONTENT FROM DOCS'))
 
 
 DatabaseUtils.create_tables()
