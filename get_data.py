@@ -1,14 +1,18 @@
 from dotenv import load_dotenv
-import os
-
 load_dotenv()
+
+import requests, json, os
+# import DatabaseUtils, GraphUtils
 
 api_key = os.environ["API_KEY"]
 
-import requests, json
+
+
+
+
 
 def get_page_info(page_id: str):
-    url = "https://api.notion.com/v1/pages/" + page_id # + "123224ca-354c-80e5-aed9-d13d55592914"
+    url = "https://api.notion.com/v1/pages/" + page_id
 
     payload = {}
     headers = {
@@ -18,7 +22,13 @@ def get_page_info(page_id: str):
 
     response = requests.request("GET", url, headers=headers, data=payload)
 
-    print(response.text)
+    response_json = response.json()
+
+    title = response_json.get("properties", {}).get("title", {}).get("title", [{}])[0].get("text", {}).get("content", "")
+    page_id = response_json.get("id", "")
+    parent_id = response_json.get("parent", {}).get("page_id", "")
+
+    return (title, page_id, parent_id)
 
 
 
@@ -57,9 +67,38 @@ def process_page_metadata(pages:list):
         print(title, page_id, parent_id)
 
 
+# NEED TO CREATE A PAGE DB FOR EACH SUBJECT
+
+def fill_page_database(root_page_id:str):
+    """
+    Step 1: Call API https://api.notion.com/v1/blocks/:root_id/children?page_size=100 
+        - Get all children ID's 
+        - For each children page:
+            - Call API <url> to get block IDs
+            - For each block ID
+                - If block type is text
+                    - Append content to subject_db.children_ID.content 
+    
+    Step 2: 
+    
+    """
+    url = f"https://api.notion.com/v1/blocks/{root_page_id}/children?page_size=100"
+
+    headers = {
+        'Notion-Version': '2022-06-28',
+        'Authorization': f'Bearer {api_key}'
+    }
+
+    response = requests.request("GET", url, headers=headers)
+
+    for _ in response.json()["results"]:
+        print(_)
 
 
+# pages_json = list_pages()
 
-pages_json = list_pages()
+# process_page_metadata(pages_json)
 
-process_page_metadata(pages_json)
+# print(get_page_info("12a224ca-354c-80b0-950e-fc16ac57c1d6"))
+
+fill_page_database("111224ca-354c-8020-8ccd-f1d4e30914ac")
